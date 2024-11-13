@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"bluebell/dao/mysql"
 	"bluebell/logic"
 	"bluebell/models"
-	"fmt"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
@@ -31,9 +32,14 @@ func SignUpHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(p)
-
-	logic.SignUp()
+	if err := logic.SignUp(p); err != nil {
+		zap.L().Error("logic.SignUp failed", zap.Error(err))
+		if errors.Is(err, mysql.ErrorUserExist) {
+			c.JSON(http.StatusOK, gin.H{
+				"msg": err.Error(),
+			})
+		}
+	}
 
 	c.JSON(200, gin.H{
 		"msg": "Success!",
